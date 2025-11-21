@@ -1792,6 +1792,7 @@ Inbound.VmessSettings.VMESS = class extends XrayCommonClass {
         security = USERS_SECURITY.AUTO,
         email = RandomUtil.randomLowerAndNum(8),
         limitIp = 0,
+        limitDevice = 0,
         totalGB = 0,
         expiryTime = 0,
         enable = true,
@@ -1807,6 +1808,7 @@ Inbound.VmessSettings.VMESS = class extends XrayCommonClass {
         this.security = security;
         this.email = email;
         this.limitIp = limitIp;
+        this.limitDevice = limitDevice;
         this.totalGB = totalGB;
         this.expiryTime = expiryTime;
         this.enable = enable;
@@ -1824,6 +1826,7 @@ Inbound.VmessSettings.VMESS = class extends XrayCommonClass {
             json.security,
             json.email,
             json.limitIp,
+            json.limitDevice,
             json.totalGB,
             json.expiryTime,
             json.enable,
@@ -1932,6 +1935,7 @@ Inbound.VLESSSettings.VLESS = class extends XrayCommonClass {
         flow = '',
         email = RandomUtil.randomLowerAndNum(8),
         limitIp = 0,
+        limitDevice = 0,
         totalGB = 0,
         expiryTime = 0,
         enable = true,
@@ -1947,6 +1951,7 @@ Inbound.VLESSSettings.VLESS = class extends XrayCommonClass {
         this.flow = flow;
         this.email = email;
         this.limitIp = limitIp;
+        this.limitDevice = limitDevice;
         this.totalGB = totalGB;
         this.expiryTime = expiryTime;
         this.enable = enable;
@@ -1964,6 +1969,7 @@ Inbound.VLESSSettings.VLESS = class extends XrayCommonClass {
             json.flow,
             json.email,
             json.limitIp,
+            json.limitDevice,
             json.totalGB,
             json.expiryTime,
             json.enable,
@@ -2077,6 +2083,7 @@ Inbound.TrojanSettings.Trojan = class extends XrayCommonClass {
         password = RandomUtil.randomSeq(10),
         email = RandomUtil.randomLowerAndNum(8),
         limitIp = 0,
+        limitDevice = 0,
         totalGB = 0,
         expiryTime = 0,
         enable = true,
@@ -2091,6 +2098,7 @@ Inbound.TrojanSettings.Trojan = class extends XrayCommonClass {
         this.password = password;
         this.email = email;
         this.limitIp = limitIp;
+        this.limitDevice = limitDevice;
         this.totalGB = totalGB;
         this.expiryTime = expiryTime;
         this.enable = enable;
@@ -2107,6 +2115,7 @@ Inbound.TrojanSettings.Trojan = class extends XrayCommonClass {
             password: this.password,
             email: this.email,
             limitIp: this.limitIp,
+            limitDevice: this.limitDevice,
             totalGB: this.totalGB,
             expiryTime: this.expiryTime,
             enable: this.enable,
@@ -2124,6 +2133,7 @@ Inbound.TrojanSettings.Trojan = class extends XrayCommonClass {
             json.password,
             json.email,
             json.limitIp,
+            json.limitDevice,
             json.totalGB,
             json.expiryTime,
             json.enable,
@@ -2246,6 +2256,7 @@ Inbound.ShadowsocksSettings.Shadowsocks = class extends XrayCommonClass {
         password = RandomUtil.randomShadowsocksPassword(),
         email = RandomUtil.randomLowerAndNum(8),
         limitIp = 0,
+        limitDevice = 0,
         totalGB = 0,
         expiryTime = 0,
         enable = true,
@@ -2261,6 +2272,7 @@ Inbound.ShadowsocksSettings.Shadowsocks = class extends XrayCommonClass {
         this.password = password;
         this.email = email;
         this.limitIp = limitIp;
+        this.limitDevice = limitDevice;
         this.totalGB = totalGB;
         this.expiryTime = expiryTime;
         this.enable = enable;
@@ -2278,6 +2290,7 @@ Inbound.ShadowsocksSettings.Shadowsocks = class extends XrayCommonClass {
             password: this.password,
             email: this.email,
             limitIp: this.limitIp,
+            limitDevice: this.limitDevice,
             totalGB: this.totalGB,
             expiryTime: this.expiryTime,
             enable: this.enable,
@@ -2296,6 +2309,7 @@ Inbound.ShadowsocksSettings.Shadowsocks = class extends XrayCommonClass {
             json.password,
             json.email,
             json.limitIp,
+            json.limitDevice,
             json.totalGB,
             json.expiryTime,
             json.enable,
