@@ -20,6 +20,15 @@ import (
 	"github.com/mhsanaei/3x-ui/v2/xray"
 )
 
+// DeviceInfo captures device metadata sent via subscription headers.
+type DeviceInfo struct {
+	HWID      string
+	OS        string
+	OSVersion string
+	Model     string
+	UserAgent string
+}
+
 // SubService provides business logic for generating subscription links and managing subscription data.
 type SubService struct {
 	address        string
@@ -39,19 +48,20 @@ func NewSubService(showInfo bool, remarkModel string) *SubService {
 }
 
 // GetSubs retrieves subscription links for a given subscription ID and host.
-func (s *SubService) GetSubs(subId string, host string) ([]string, int64, xray.ClientTraffic, error) {
+func (s *SubService) GetSubs(subId string, host string, device DeviceInfo) ([]string, int64, xray.ClientTraffic, string, error) {
 	s.address = host
 	var result []string
 	var traffic xray.ClientTraffic
 	var lastOnline int64
 	var clientTraffics []xray.ClientTraffic
+
 	inbounds, err := s.getInboundsBySubId(subId)
 	if err != nil {
-		return nil, 0, traffic, err
+		return nil, 0, traffic, "", err
 	}
 
 	if len(inbounds) == 0 {
-		return nil, 0, traffic, common.NewError("No inbounds found with ", subId)
+		return nil, 0, traffic, "", common.NewError("No inbounds found with ", subId)
 	}
 
 	s.datepicker, err = s.settingService.GetDatepicker()
@@ -76,6 +86,18 @@ func (s *SubService) GetSubs(subId string, host string) ([]string, int64, xray.C
 		}
 		for _, client := range clients {
 			if client.Enable && client.SubID == subId {
+				if device.HWID != "" && client.LimitDevice > 0 {
+					allowed, needRestart, devErr := s.inboundService.RecordDeviceAndEnforce(client.Email, device.HWID, device.OS, device.OSVersion, device.Model, device.UserAgent, client.LimitDevice)
+					if devErr != nil {
+						logger.Warningf("Device limit check failed for %s: %v", client.Email, devErr)
+					}
+					if needRestart {
+						logger.Warning("Xray needs restart due to device limit enforcement")
+					}
+					if !allowed {
+						return nil, 0, traffic, "Device limit exceeded for this account", nil
+					}
+				}
 				link := s.getLink(inbound, client.Email)
 				result = append(result, link)
 				ct := s.getClientTraffics(inbound.ClientStats, client.Email)
@@ -87,7 +109,6 @@ func (s *SubService) GetSubs(subId string, host string) ([]string, int64, xray.C
 		}
 	}
 
-	// Prepare statistics
 	for index, clientTraffic := range clientTraffics {
 		if index == 0 {
 			traffic.Up = clientTraffic.Up
@@ -109,7 +130,7 @@ func (s *SubService) GetSubs(subId string, host string) ([]string, int64, xray.C
 			}
 		}
 	}
-	return result, lastOnline, traffic, nil
+	return result, lastOnline, traffic, "", nil
 }
 
 func (s *SubService) getInboundsBySubId(subId string) ([]*model.Inbound, error) {

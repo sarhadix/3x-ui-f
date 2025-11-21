@@ -70,7 +70,19 @@ func (a *SUBController) initRouter(g *gin.RouterGroup) {
 func (a *SUBController) subs(c *gin.Context) {
 	subId := c.Param("subid")
 	scheme, host, hostWithPort, hostHeader := a.subService.ResolveRequest(c)
-	subs, lastOnline, traffic, err := a.subService.GetSubs(subId, host)
+	device := DeviceInfo{
+		HWID:      c.GetHeader("x-hwid"),
+		OS:        c.GetHeader("x-device-os"),
+		OSVersion: c.GetHeader("x-ver-os"),
+		Model:     c.GetHeader("x-device-model"),
+		UserAgent: c.GetHeader("User-Agent"),
+	}
+	subs, lastOnline, traffic, limitMsg, err := a.subService.GetSubs(subId, host, device)
+	if limitMsg != "" {
+		c.Writer.Header().Set("announce", limitMsg)
+		c.String(403, limitMsg)
+		return
+	}
 	if err != nil || len(subs) == 0 {
 		c.String(400, "Error!")
 	} else {
@@ -141,11 +153,22 @@ func (a *SUBController) subs(c *gin.Context) {
 func (a *SUBController) subJsons(c *gin.Context) {
 	subId := c.Param("subid")
 	_, host, _, _ := a.subService.ResolveRequest(c)
-	jsonSub, header, err := a.subJsonService.GetJson(subId, host)
+	device := DeviceInfo{
+		HWID:      c.GetHeader("x-hwid"),
+		OS:        c.GetHeader("x-device-os"),
+		OSVersion: c.GetHeader("x-ver-os"),
+		Model:     c.GetHeader("x-device-model"),
+		UserAgent: c.GetHeader("User-Agent"),
+	}
+	jsonSub, header, limitMsg, err := a.subJsonService.GetJson(subId, host, device)
+	if limitMsg != "" {
+		c.Writer.Header().Set("announce", limitMsg)
+		c.String(403, limitMsg)
+		return
+	}
 	if err != nil || len(jsonSub) == 0 {
 		c.String(400, "Error!")
 	} else {
-
 		// Add headers
 		a.ApplyCommonHeaders(c, header, a.updateInterval, a.subTitle)
 

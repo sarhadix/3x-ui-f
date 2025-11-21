@@ -70,10 +70,10 @@ func NewSubJsonService(fragment string, noises string, mux string, rules string,
 }
 
 // GetJson generates a JSON subscription configuration for the given subscription ID and host.
-func (s *SubJsonService) GetJson(subId string, host string) (string, string, error) {
+func (s *SubJsonService) GetJson(subId string, host string, device DeviceInfo) (string, string, string, error) {
 	inbounds, err := s.SubService.getInboundsBySubId(subId)
 	if err != nil || len(inbounds) == 0 {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	var header string
@@ -101,6 +101,18 @@ func (s *SubJsonService) GetJson(subId string, host string) (string, string, err
 
 		for _, client := range clients {
 			if client.Enable && client.SubID == subId {
+				if device.HWID != "" && client.LimitDevice > 0 {
+					allowed, needRestart, devErr := s.inboundService.RecordDeviceAndEnforce(client.Email, device.HWID, device.OS, device.OSVersion, device.Model, device.UserAgent, client.LimitDevice)
+					if devErr != nil {
+						logger.Warningf("Device limit check failed for %s: %v", client.Email, devErr)
+					}
+					if needRestart {
+						logger.Warning("Xray needs restart due to device limit enforcement")
+					}
+					if !allowed {
+						return "", "", "Device limit exceeded for this account", nil
+					}
+				}
 				clientTraffics = append(clientTraffics, s.SubService.getClientTraffics(inbound.ClientStats, client.Email))
 				newConfigs := s.getConfig(inbound, client, host)
 				configArray = append(configArray, newConfigs...)
@@ -109,10 +121,9 @@ func (s *SubJsonService) GetJson(subId string, host string) (string, string, err
 	}
 
 	if len(configArray) == 0 {
-		return "", "", nil
+		return "", "", "", nil
 	}
 
-	// Prepare statistics
 	for index, clientTraffic := range clientTraffics {
 		if index == 0 {
 			traffic.Up = clientTraffic.Up
@@ -135,7 +146,6 @@ func (s *SubJsonService) GetJson(subId string, host string) (string, string, err
 		}
 	}
 
-	// Combile outbounds
 	var finalJson []byte
 	if len(configArray) == 1 {
 		finalJson, _ = json.MarshalIndent(configArray[0], "", "  ")
@@ -144,9 +154,8 @@ func (s *SubJsonService) GetJson(subId string, host string) (string, string, err
 	}
 
 	header = fmt.Sprintf("upload=%d; download=%d; total=%d; expire=%d", traffic.Up, traffic.Down, traffic.Total, traffic.ExpiryTime/1000)
-	return string(finalJson), header, nil
+	return string(finalJson), header, "", nil
 }
-
 func (s *SubJsonService) getConfig(inbound *model.Inbound, client model.Client, host string) []json_util.RawMessage {
 	var newJsonArray []json_util.RawMessage
 	stream := s.streamData(inbound.StreamSettings)
